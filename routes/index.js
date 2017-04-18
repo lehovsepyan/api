@@ -10,7 +10,7 @@ const _      = require('lodash'),
 /**
  *  Request Handlers
  */
-const UserHandler = require('../request_handlers/user')
+const UserHandler = require('../request/user')
 
 /**
  * Model Schema
@@ -37,9 +37,9 @@ server.post('/login', UserHandler.login)
  * - Authorized API
  */
 
-server.get('api/user', UserHandler.getUserInfo)
+server.get('/api/user', UserHandler.getUserInfo)
 
-server.get('api/users', UserHandler.getUsers)
+server.get('/api/users', UserHandler.getUsers)
 
 
 /**

@@ -3,7 +3,7 @@
 module.exports = {
     name: 'API',
     version: '0.0.1',
-    tokenExpiration: 100, // minutes
+    tokenExpiration: 14400, // seconds
     secret: 'this_is_the_secret',
     env: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3000,

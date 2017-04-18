@@ -3,6 +3,7 @@
 const User = require('../models/user'),
       jwt             = require('jsonwebtoken'),
       responseManager = require('../response/ResponseManager'),
+      bcrypt = require('bcrypt'),
       config          = require('../config');
 
 /**
@@ -83,7 +84,14 @@ var removeAll = function(req, res, next) {
 };
 
 var getUserInfo = function(req, res, next) {
-    jwt
+    var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
+    User.findOne({_id: userId}).select('email').select('name').exec(function(error, user) {
+        if (error) {
+            responseManager.error(res)
+        } else {
+            responseManager.success(res, next, user)
+        }
+    })
 };
 
 /**
@@ -103,12 +111,18 @@ var loginWith = function(req, res, next) {
                  if (error || !isMatch) {
                      responseManager.error(res, 'Authentication failed. Wrong password.', error || {})
                  } else {
-                     var token = jwt.sign(user, config.secret, {expiresIn : config.tokenExpiration})
-                     responseManager.success(res, next, {
+                    var token = jwt.sign({ id: user._id }, config.secret, { expiresIn : config.tokenExpiration })
+                    user.save(function(error, user, info) {
+                        if (error) {
+                            responseManager.error(res)
+                        } else {
+                            responseManager.success(res, next, {
                                                     name: user.name,
                                                     email: user.email,
                                                     token: token
-                     })
+                            })
+                        }
+                    })
                  }
             });
         }

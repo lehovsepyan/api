@@ -10,7 +10,7 @@ var error = function(res, message = "Internal Server Error", object = {}, code =
 
 var success = function(res, next = null, object = {}, code = 200) {
     res.status(code)
-    res.json(object)
+    res.json(object || {})
     return next()
 }
 
