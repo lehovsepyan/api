@@ -3,7 +3,7 @@
 const User = require('../models/user'),
       jwt            = require('jsonwebtoken'),
       ResponseObject = require('../response_handlers/ResponseObject'),
-      Config         = require('../config');
+      config         = require('../config');
 
 /**
  *  - Authentication
@@ -57,11 +57,11 @@ var login = function(req, res, next) {
 var getUsers = function(req, res, next) {
     User.find(function(error, users) {
          if (error) {
-            ResponseObject.sendError(res, error)
-         } else {
-            ResponseObject.sendSuccess(res, next, users)
-         }
-    })
+             ResponseObject.sendError(res, error)
+        } else {
+              ResponseObject.sendSuccess(res, next, users)
+       }
+   })
 };
 
 var removeAll = function(req, res, next) {
@@ -91,7 +91,7 @@ var loginWith = function(req, res, next) {
                  if (error || !isMatch) {
                       ResponseObject.sendError(res, 'Authentication failed. Wrong password.')
                  } else {
-                     var token = jwt.sign(user, Config.secret)
+                     var token = jwt.sign(user, config.secret)
                      ResponseObject.sendSuccess(res, next, {
                                                     name: user.name,
                                                     email: user.email,

@@ -7,8 +7,10 @@ const config        = require('./config'),
       restify       = require('restify'),
       bunyan        = require('bunyan'),
       winston       = require('winston'),
+      jwt            = require('jsonwebtoken'),
       bunyanWinston = require('bunyan-winston-adapter'),
-      mongoose      = require('mongoose')
+      mongoose      = require('mongoose'),
+      responseObject = require('./response_handlers/ResponseObject')
 
 /**
  * Logging
@@ -41,6 +43,28 @@ global.server = restify.createServer({
  server.use(restify.acceptParser(server.acceptable))
  server.use(restify.queryParser({ mapParams: false }))
  server.use(restify.fullResponse())
+ server.use(restify.authorizationParser())
+
+ server.use(function(req, res, next) {
+
+     if (req.url.indexOf('api/') == -1) {
+        next();
+     } else {
+        var token = req.headers['x-access-token'];
+        if (token) {
+            jwt.verify(token, config.secret, function(error, decoded) {
+                if (error) {
+                    responseObject.sendError(res, { message: 'Invalid Token'}, 422)
+                } else {
+                    req.decoded = decoded;    
+                    next();
+                }
+            })
+        } else {
+            responseObject.sendError(res, { message: 'Invalid Token'}, 422)
+        }
+     }
+})
 
 /**
  * Error Handling

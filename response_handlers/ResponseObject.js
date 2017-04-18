@@ -1,6 +1,7 @@
 'use strict'
 
-var sendError = function(res, object) {
+var sendError = function(res, object, code = 403) {
+    res.status(code)
     res.json({  
         success: false,
         result: object || 'Undefined error'

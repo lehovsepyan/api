@@ -25,10 +25,16 @@ server.get('/', function(req, res) {
     ResponseObject.sendSuccess(res, { message: 'Hello! The API is under construction'})
 })
 
+/**
+ *  - Public API
+ */
+
 server.post('/user', UserHandler.create);
 
-server.post('/api/login', UserHandler.login)
+server.post('/login', UserHandler.login)
 
-server.get('/users', UserHandler.getUsers);
+/**
+ * - Authorized API
+ */
 
-server.post('/remove', UserHandler.removeAll);
+server.get('api/users', UserHandler.getUsers);
