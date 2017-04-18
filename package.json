@@ -1,0 +1,32 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Rest api server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lehovsepyan/api.git"
+  },
+  "keywords": [
+    "api"
+  ],
+  "author": "Levon Hovsepyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lehovsepyan/api/issues"
+  },
+  "homepage": "https://github.com/lehovsepyan/api#readme",
+  "dependencies": {
+    "bunyan-winston-adapter": "^0.2.0",
+    "lodash": "^4.17.4",
+    "mongoose": "^4.9.5",
+    "mongoose-api-query": "^0.1.1-pre",
+    "mongoose-createdmodified": "0.0.2",
+    "restify": "^4.3.0",
+    "restify-errors": "^4.3.0",
+    "winston": "^2.3.1"
+  }
+}
