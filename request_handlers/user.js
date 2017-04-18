@@ -1,9 +1,9 @@
 'use strict'
 
 const User = require('../models/user'),
-      jwt            = require('jsonwebtoken'),
-      ResponseObject = require('../response_handlers/ResponseObject'),
-      config         = require('../config');
+      jwt             = require('jsonwebtoken'),
+      responseManager = require('../response/ResponseManager'),
+      config          = require('../config');
 
 /**
  *  - Authentication
@@ -30,16 +30,24 @@ var create = function(req, res, next) {
     }
 
     if (failedFields.length != 0) {
-        ResponseObject.sendError(res, {
-            error_fields: failedFields
-        })
+        responseManager.error(res, 'Validation Failed', {fields: failedFields})
         return
     }
 
     var user = User(userObject);
     user.save(function (error, user) {
         if (error) {
-            ResponseObject.sendError(res, error)
+            if (error.code == 11000) {
+                var existingUser = error.getOperation()
+                responseManager.error(res, 'User already exists', {
+                    existing_user: {
+                        name: existingUser.name,
+                        email: existingUser.email
+                    }
+                })
+            } else {
+                responseManager.error(res)
+            }
         } else {
             loginWith(req, res, next)
         }
@@ -57,9 +65,9 @@ var login = function(req, res, next) {
 var getUsers = function(req, res, next) {
     User.find(function(error, users) {
          if (error) {
-             ResponseObject.sendError(res, error)
+             responseManager.error(res, error)
         } else {
-              ResponseObject.sendSuccess(res, next, users)
+            responseManager.success(res, next, users)
        }
    })
 };
@@ -67,11 +75,15 @@ var getUsers = function(req, res, next) {
 var removeAll = function(req, res, next) {
     User.remove({}, function(error, users) {
          if (error) {
-            ResponseObject.sendError(res, error)
+             responseManager.error(res, error)
          } else {
-            ResponseObject.sendSuccess(res, next, null)
+             responseManager.success(res, next, users, 201)
          }
     })
+};
+
+var getUserInfo = function(req, res, next) {
+    jwt
 };
 
 /**
@@ -83,16 +95,16 @@ var loginWith = function(req, res, next) {
             email: req.body.email
     }, function(error, user) {
         if (error) {
-            ResponseObject.sendError(res, error)
+            responseManager.error(res, error)
         } else if (!user) {
-            ResponseObject.sendError(res, 'Authentication failed. User not found.')
+            responseManager.error(res, 'Authentication failed. User not found.')
         } else if (user) {
             user.comparePassword(req.body.password, function(error, isMatch) {
                  if (error || !isMatch) {
-                      ResponseObject.sendError(res, 'Authentication failed. Wrong password.')
+                     responseManager.error(res, 'Authentication failed. Wrong password.', error || {})
                  } else {
-                     var token = jwt.sign(user, config.secret)
-                     ResponseObject.sendSuccess(res, next, {
+                     var token = jwt.sign(user, config.secret, {expiresIn : config.tokenExpiration})
+                     responseManager.success(res, next, {
                                                     name: user.name,
                                                     email: user.email,
                                                     token: token
@@ -103,6 +115,7 @@ var loginWith = function(req, res, next) {
      })
 };
 
+module.exports.getUserInfo = getUserInfo;
 module.exports.create = create;
 module.exports.login = login;
 module.exports.getUsers = getUsers;

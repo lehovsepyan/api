@@ -3,14 +3,14 @@
 /**
  * Module Dependencies
  */
-const config        = require('./config'),
-      restify       = require('restify'),
-      bunyan        = require('bunyan'),
-      winston       = require('winston'),
-      jwt            = require('jsonwebtoken'),
-      bunyanWinston = require('bunyan-winston-adapter'),
-      mongoose      = require('mongoose'),
-      responseObject = require('./response_handlers/ResponseObject')
+const config          = require('./config'),
+      restify         = require('restify'),
+      bunyan          = require('bunyan'),
+      winston         = require('winston'),
+      jwt             = require('jsonwebtoken'),
+      bunyanWinston   = require('bunyan-winston-adapter'),
+      mongoose        = require('mongoose'),
+      responseManager = require('./response/ResponseManager')
 
 /**
  * Logging
@@ -54,14 +54,14 @@ global.server = restify.createServer({
         if (token) {
             jwt.verify(token, config.secret, function(error, decoded) {
                 if (error) {
-                    responseObject.sendError(res, { message: 'Invalid Token'}, 422)
+                    responseManager.error(res, 'Token expired', {}, 421)
                 } else {
                     req.decoded = decoded;    
                     next();
                 }
             })
         } else {
-            responseObject.sendError(res, { message: 'Invalid Token'}, 422)
+            responseManager.error(res, 'Invalid Token', {}, 422)
         }
      }
 })

@@ -5,7 +5,7 @@
  */
 const _      = require('lodash'),
       errors = require('restify-errors'),
-      ResponseObject = require('../response_handlers/responseObject')
+      responseManager = require('../response/ResponseManager')
 
 /**
  *  Request Handlers
@@ -22,14 +22,14 @@ const User = require('../models/user')
  */
 
 server.get('/', function(req, res) {
-    ResponseObject.sendSuccess(res, { message: 'Hello! The API is under construction'})
+    responseManager.success(res, { message: 'Hello! The API is under construction'})
 })
 
 /**
  *  - Public API
  */
 
-server.post('/user', UserHandler.create);
+server.post('/user', UserHandler.create)
 
 server.post('/login', UserHandler.login)
 
@@ -37,4 +37,13 @@ server.post('/login', UserHandler.login)
  * - Authorized API
  */
 
-server.get('api/users', UserHandler.getUsers);
+server.get('api/user', UserHandler.getUserInfo)
+
+server.get('api/users', UserHandler.getUsers)
+
+
+/**
+ * - Temp
+ */
+
+server.post('/admin/remove', UserHandler.removeAll)
