@@ -11,4 +11,5 @@ module.exports = {
     db: {
         uri: 'mongodb://127.0.0.1:27017/api',
     },
+    defaultImageUrl: 'lalala.com'
 }

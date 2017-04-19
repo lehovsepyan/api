@@ -49,7 +49,7 @@ global.server = restify.createServer({
  server.use(function(req, res, next) {
 
      if (req.url.indexOf('api/') == -1) {
-        next();
+        next()
      } else {
         var token = req.headers['x-access-token'];
         if (token) {
@@ -81,7 +81,7 @@ server.pre(function(req, res, next) {
             req.headers['accept-version'] = version;
             return next()
         } else {
-            return responseManager.badRequestError(res, 'Invalid Version Specifier')
+            return responseManager.badRequestError(res, 'Invalid Version Specifier', 'Invalid Version Specifier', null)
         }
     } else {
         return next()

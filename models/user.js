@@ -7,10 +7,12 @@ const mongoose = require('mongoose'),
       SALT_WORK_FACTOR = 10;
 
 var UserSchema = mongoose.Schema({
-    name: {
-        type: String,
-        require: true
-    },
+    name: String,
+    last_name: String,
+    phone: String,
+    image_url: String,
+    birthdate: String,
+    gender: Number, // male - 0 | female - 1
     password: {
         type: String,
         require: true

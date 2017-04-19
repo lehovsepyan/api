@@ -1,20 +1,20 @@
 'use strict'
 
-var badRequestError = function(res, message = 'Bad Request', details = {}) {
+var badRequestError = function(res, message, userMessage, details) {
     res.status(400)
     res.json({  
-        message: message,
-        user_message: 'Something went wrong',
-        details: details 
+        message: message || 'Bad Request',
+        user_message: userMessage || 'Something went wrong',
+        details: details || {}
     })
 };
 
-var internalServerError = function(res, message = 'Internal Server Error', details = {}) {
+var internalServerError = function(res, message, userMessage, details) {
     res.status(500)
     res.json({
-        message: message,
-        user_message: 'Something wrong happened. Please try later',
-        details: details
+        message: message || 'Internal Server Error',
+        user_message: userMessage || 'Something wrong happened. Please try later',
+        details: details || {}
     })
 };
 
@@ -45,12 +45,12 @@ var notFoundError = function(res) {
     })
 };
 
-var conflictError = function(res, message) {
+var conflictError = function(res, message, userMessage, details) {
     res.status(409)
     res.json({
-        message: message,
-        user_message: 'Already exists',
-        details: {}
+        message: message || 'Duplicate value',
+        user_message: userMessage || 'Already exists',
+        details: details || {}
     })
 };
 

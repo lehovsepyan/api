@@ -10,8 +10,8 @@ const _      = require('lodash'),
 /**
  *  Request Handlers
  */
-const UserHandlerV1  = require('../request/user'),
-      AdminHandler = require('../request/admin') 
+const UserHandlerV1  = require('../requests-V1/user'),
+      AdminHandler = require('../requests-V1/admin') 
 
 /**
  * Model Schema
