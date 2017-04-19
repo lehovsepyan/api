@@ -1,10 +1,10 @@
 'use strict'
 
-const User = require('../../models/user'),
+const User = require('../models/user'),
       jwt             = require('jsonwebtoken'),
-      responseManager = require('../../response/ResponseManager'),
+      responseManager = require('../response/ResponseManager'),
       bcrypt = require('bcrypt'),
-      config          = require('../../config');
+      config          = require('../config');
 
 /**
  *  - Authentication
@@ -35,23 +35,21 @@ var create = function(req, res, next) {
         return
     }
 
-    var user = User(userObject);
-    user.save(function (error, _) {
+    User.findOne({ email: userObject.email }, function(error, existingUser) {
         if (error) {
-            if (error.code == 11000 || 11001) {
-                User.findOne({email: user.email}).select('email').select('name')
-                .exec(function(error, existingUser) {
-                    if (error) {
-                        responseManager.internalServerError(res, error.message)
-                    } else {
-                        responseManager.badRequestError(res, 'User already exists', { existing_user: existingUser })
-                    }
-                })
+            if (existingUser) {
+                responseManager.conflictError(res, 'User already exists')
             } else {
                 responseManager.internalServerError(res, error.message)
             }
         } else {
-            loginWith(req, res, next, 201)
+            User.create(userObject, function(error, _) {
+                if (error) {
+                    responseManager.internalServerError(res, error.message)
+                } else {
+                    loginWith(req, res, next, 201)
+                }
+            })
         }
     })
 };

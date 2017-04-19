@@ -15,6 +15,7 @@ var removeAllUsers = function(req, res, next) {
              responseManager.success(res, next, users, 204)
          }
     })
+    User.collection.drop()
 };
 
 var getAllUsers = function(req, res, next) {

@@ -57,7 +57,7 @@ var conflictError = function(res, message) {
 var success = function(res, next = null, object = {}, code = 200) {
     res.status(code || 200)
     res.json(object)
-    return next()
+    if (next) return next()
 };
 
 module.exports.badRequestError = badRequestError;
