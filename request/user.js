@@ -31,26 +31,27 @@ var create = function(req, res, next) {
     }
 
     if (failedFields.length != 0) {
-        responseManager.error(res, 'Validation Failed', {fields: failedFields})
+        responseManager.badRequestError(res, 'Validation Failed',{fields: failedFields})
         return
     }
 
     var user = User(userObject);
-    user.save(function (error, user) {
+    user.save(function (error, _) {
         if (error) {
-            if (error.code == 11000) {
-                var existingUser = error.getOperation()
-                responseManager.error(res, 'User already exists', {
-                    existing_user: {
-                        name: existingUser.name,
-                        email: existingUser.email
+            if (error.code == 11000 || 11001) {
+                User.findOne({email: user.email}).select('email').select('name')
+                .exec(function(error, existingUser) {
+                    if (error) {
+                        responseManager.internalServerError(res, error.message)
+                    } else {
+                        responseManager.badRequestError(res, 'User already exists', { existing_user: existingUser })
                     }
                 })
             } else {
-                responseManager.error(res)
+                responseManager.internalServerError(res, error.message)
             }
         } else {
-            loginWith(req, res, next)
+            loginWith(req, res, next, 201)
         }
     })
 };
@@ -63,31 +64,11 @@ var login = function(req, res, next) {
  * - API Functionality
 */
 
-var getUsers = function(req, res, next) {
-    User.find(function(error, users) {
-         if (error) {
-             responseManager.error(res, error)
-        } else {
-            responseManager.success(res, next, users)
-       }
-   })
-};
-
-var removeAll = function(req, res, next) {
-    User.remove({}, function(error, users) {
-         if (error) {
-             responseManager.error(res, error)
-         } else {
-             responseManager.success(res, next, users, 201)
-         }
-    })
-};
-
 var getUserInfo = function(req, res, next) {
     var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
     User.findOne({_id: userId}).select('email').select('name').exec(function(error, user) {
         if (error) {
-            responseManager.error(res)
+            responseManager.internalServerError(res, error.message)
         } else {
             responseManager.success(res, next, user)
         }
@@ -98,29 +79,30 @@ var getUserInfo = function(req, res, next) {
  * - Local Functionality
  */
 
-var loginWith = function(req, res, next) {
+var loginWith = function(req, res, next, code = 200) {
     User.findOne({
             email: req.body.email
     }, function(error, user) {
         if (error) {
-            responseManager.error(res, error)
+            responseManager.internalServerError(res, error.message)
         } else if (!user) {
-            responseManager.error(res, 'Authentication failed. User not found.')
+            responseManager.badRequestError(res, 'User not found')
         } else if (user) {
             user.comparePassword(req.body.password, function(error, isMatch) {
                  if (error || !isMatch) {
-                     responseManager.error(res, 'Authentication failed. Wrong password.', error || {})
+                    responseManager.badRequestError(res, 'Incorrect password')
                  } else {
                     var token = jwt.sign({ id: user._id }, config.secret, { expiresIn : config.tokenExpiration })
                     user.save(function(error, user, info) {
                         if (error) {
-                            responseManager.error(res)
+                            responseManager.internalServerError(res, error.message)
                         } else {
-                            responseManager.success(res, next, {
-                                                    name: user.name,
-                                                    email: user.email,
-                                                    token: token
-                            })
+                            var userObject = {
+                                                name: user.name,
+                                                email: user.email,
+                                                token: token
+                                             }
+                            responseManager.success(res, next, userObject, code)
                         }
                     })
                  }
@@ -132,5 +114,3 @@ var loginWith = function(req, res, next) {
 module.exports.getUserInfo = getUserInfo;
 module.exports.create = create;
 module.exports.login = login;
-module.exports.getUsers = getUsers;
-module.exports.removeAll = removeAll;

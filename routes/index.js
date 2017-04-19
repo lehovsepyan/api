@@ -10,7 +10,8 @@ const _      = require('lodash'),
 /**
  *  Request Handlers
  */
-const UserHandler = require('../request/user')
+const UserHandler  = require('../request/user'),
+      AdminHandler = require('../request/admin') 
 
 /**
  * Model Schema
@@ -22,7 +23,7 @@ const User = require('../models/user')
  */
 
 server.get('/', function(req, res) {
-    responseManager.success(res, { message: 'Hello! The API is under construction'})
+    responseManager.success(res, null, { message: 'Hello! The API is under construction'}, 200)
 })
 
 /**
@@ -39,11 +40,10 @@ server.post('/login', UserHandler.login)
 
 server.get('/api/user', UserHandler.getUserInfo)
 
-server.get('/api/users', UserHandler.getUsers)
-
-
 /**
- * - Temp
+ * - Admin
  */
 
-server.post('/admin/remove', UserHandler.removeAll)
+server.post('/admin/remove', AdminHandler.removeAllUsers)
+
+server.get('/admin/users', AdminHandler.getAllUsers)

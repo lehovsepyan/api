@@ -54,14 +54,14 @@ global.server = restify.createServer({
         if (token) {
             jwt.verify(token, config.secret, function(error, decoded) {
                 if (error) {
-                    responseManager.error(res, 'Token expired', {}, 421)
+                    responseManager.tokenExpiredError(res)
                 } else {
                     req.decoded = decoded;    
                     next();
                 }
             })
         } else {
-            responseManager.error(res, 'Invalid Token', {}, 422)
+            responseManager.unauthorizedError(res)
         }
      }
 })
