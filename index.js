@@ -69,8 +69,8 @@ global.server = restify.createServer({
 
 server.pre(function(req, res, next) {
     var pieces = req.url.replace(/^\/+/, '').split('/')
-    var version = pieces[1]
-    if (pieces[0] == 'api' && version != undefined) {
+    var version = pieces[0]
+    if (version != undefined) {
         var replacedVersion
         if (!semver.valid(version)) {
             replacedVersion = version.replace(/v(\d{1})/, '$1.0.0')

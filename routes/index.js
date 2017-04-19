@@ -11,7 +11,7 @@ const _      = require('lodash'),
  *  Request Handlers
  */
 const UserHandlerV1  = require('../requests-V1/user'),
-      AdminHandler = require('../requests-V1/admin') 
+      AdminHandler = require('../requests/admin') 
 
 /**
  * Model Schema
@@ -30,9 +30,9 @@ server.get('/', function(req, res) {
  *  - Public API
  */
 
-server.post('/user', UserHandlerV1.create)
+server.post({path: '/user', version: '1.0.0'}, UserHandlerV1.create)
 
-server.post('/login', UserHandlerV1.login)
+server.post({path: '/login', version: '1.0.0'}, UserHandlerV1.login)
 
 /**
  * - Authorized API

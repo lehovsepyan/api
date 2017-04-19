@@ -66,7 +66,8 @@ var login = function(req, res, next) {
 
 var getUserInfo = function(req, res, next) {
     var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
-    User.findOne({ _id: userId }).select('email').select('name').exec(function(error, user) {
+
+    User.find({ _id: userId }, 'email name last_name phone gender birthdate image_url').exec(function(error, user) {
         if (error) {
             responseManager.internalServerError(res, error.message, null, null)
         } else {
