@@ -10,7 +10,7 @@ const _      = require('lodash'),
 /**
  *  Request Handlers
  */
-const UserHandler  = require('../request/user'),
+const UserHandlerV1  = require('../request/v1/user'),
       AdminHandler = require('../request/admin') 
 
 /**
@@ -30,15 +30,15 @@ server.get('/', function(req, res) {
  *  - Public API
  */
 
-server.post('/user', UserHandler.create)
+server.post('/user', UserHandlerV1.create)
 
-server.post('/login', UserHandler.login)
+server.post('/login', UserHandlerV1.login)
 
 /**
  * - Authorized API
  */
 
-server.get('/api/user', UserHandler.getUserInfo)
+server.get({path: '/api/user', version: '1.0.0'}, UserHandlerV1.getUserInfo)
 
 /**
  * - Admin

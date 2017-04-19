@@ -4,7 +4,7 @@ var badRequestError = function(res, message = 'Bad Request', details = {}) {
     res.status(400)
     res.json({  
         message: message,
-        user_message: 'The document in the entity-body should contain more info on the problem',
+        user_message: 'Something went wrong',
         details: details 
     })
 };

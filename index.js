@@ -10,7 +10,8 @@ const config          = require('./config'),
       jwt             = require('jsonwebtoken'),
       bunyanWinston   = require('bunyan-winston-adapter'),
       mongoose        = require('mongoose'),
-      responseManager = require('./response/ResponseManager')
+      responseManager = require('./response/ResponseManager'),
+      semver = require('semver');
 
 /**
  * Logging
@@ -32,7 +33,7 @@ global.log = new winston.Logger({
  */
 global.server = restify.createServer({
     name    : config.name,
-    version : config.version,
+    versions : config.versions,
     log     : bunyanWinston.createAdapter(log),
 })
 
@@ -64,6 +65,28 @@ global.server = restify.createServer({
             responseManager.unauthorizedError(res)
         }
      }
+})
+
+server.pre(function(req, res, next) {
+    var pieces = req.url.replace(/^\/+/, '').split('/')
+    var api = pieces[0]
+    var version = pieces[1]
+    if (api != undefined && version != undefined) {
+        var replacedVersion
+        if (!semver.valid(version)) {
+            replacedVersion = version.replace(/v(\d{1})/, '$1.0.0')
+        }
+
+        if (semver.valid(replacedVersion) && server.versions.indexOf(replacedVersion) > -1) {
+            req.url = req.url.replace(version + '/', '')
+            req.headers['accept-version'] = version;
+            return next()
+        } else {
+            return responseManager.badRequestError(res, 'Invalid Version Specifier')
+        }
+    } else {
+        return next()
+    }
 })
 
 /**
