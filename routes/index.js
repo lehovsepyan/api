@@ -48,6 +48,8 @@ server.post({path: '/login', version: '2.0.0'}, function(req, res, next) {
 
 server.get({path: '/api/user', version: '1.0.0'}, UserHandlerV1.getUserInfo)
 
+server.put({path: '/api/update', version: '1.0.0'}, UserHandlerV1.update)
+
 /**
  * - Admin
  */
