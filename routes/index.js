@@ -30,7 +30,7 @@ server.get('/', function(req, res) {
  *  - Public API
  */
 
-server.post({path: '/user', version: '1.0.0'}, UserHandlerV1.create)
+server.post({path: '/user', version: '1.0.0'}, UserHandlerV1.register)
 
 server.post({path: '/login', version: '1.0.0'}, UserHandlerV1.login)
 
@@ -41,7 +41,6 @@ server.post({path: '/login', version: '1.1.0'}, function(req, res, next) {
 server.post({path: '/login', version: '2.0.0'}, function(req, res, next) {
       res.json({message: '/login 2.0.0'})
 })
-
 
 /**
  * - Authorized API

@@ -40,9 +40,10 @@ global.server = restify.createServer({
 /**
  * Middleware
  */
- server.use(restify.jsonBodyParser({ mapParams: true }))
+
+ server.use(restify.bodyParser({ mapParms: true, mapFiles: true, keepExtensions: true }))
  server.use(restify.acceptParser(server.acceptable))
- server.use(restify.queryParser({ mapParams: false }))
+ server.use(restify.queryParser({ mapParams: true }))
  server.use(restify.fullResponse())
  server.use(restify.authorizationParser())
 

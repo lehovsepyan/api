@@ -4,13 +4,16 @@ const User = require('../../models/user'),
       jwt             = require('jsonwebtoken'),
       responseManager = require('../../response/ResponseManager'),
       bcrypt = require('bcrypt'),
+      fs = require('fs'),
+      path = require("path"),
       config          = require('../../config');
 
 /**
  *  - Authentication
  */
 
-var create = function(req, res, next) {
+var register = function(req, res, next) {
+
     var userObject = {}
     var failedFields = []
 
@@ -24,7 +27,7 @@ var create = function(req, res, next) {
     } else {
         failedFields.push('email')
     }
-    if (req.body.gender != undefined && [0, 1].indexOf(req.body.gender) == -1) {
+    if (req.body.gender != undefined && ["0", "1"].indexOf(req.body.gender) == -1) {
          failedFields.push('gender')
     }
 
@@ -44,14 +47,16 @@ var create = function(req, res, next) {
         if (existingUser) {
             responseManager.conflictError(res, 'User already exists', 'User already exists', { existing_user: existingUser})
         } else {
-            var user = User(userObject)
-            user.save(userObject, function(error, _) {
+            saveImage(req, function(error, imagePath) {
                 if (error) {
                     responseManager.internalServerError(res, error.message, null, null)
                 } else {
-                    loginWith(req, res, next, 201)
+                    userObject['image_url'] = imagePath
+                    saveUser(userObject, function() {
+                        loginWith(req, res, next, 201)
+                    })
                 }
-            })
+             })
         }
     })
 };
@@ -118,6 +123,34 @@ var loginWith = function(req, res, next, code = 200) {
      })
 };
 
+var saveUser = function(userObject, callback) {
+    var user = User(userObject)
+    user.save(userObject, function(error, _) {
+        if (error) {
+            responseManager.internalServerError(res, error.message, null, null)
+        } else {
+            callback()
+        }
+    })
+};
+
+var saveImage = function(req, callback) {
+    if (!req.files.image) {
+        return callback(null, config.defaultImageUrl)
+    } 
+    var tempImagePath = req.files.image.path
+    var fileExt = path.extname(tempImagePath)
+    var fileName = Date.now() + fileExt
+    var imagePath = process.cwd() + "/images/" + fileName
+    fs.rename(tempImagePath, imagePath, function(error) {
+        if (error) {
+            callback(error, null) 
+        } else {
+            callback(null, imagePath)
+        }
+    })
+};
+
 module.exports.getUserInfo = getUserInfo;
-module.exports.create = create;
+module.exports.register = register;
 module.exports.login = login;
