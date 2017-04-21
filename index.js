@@ -70,21 +70,13 @@ global.server = restify.createServer({
 server.pre(function(req, res, next) {
     var pieces = req.url.replace(/^\/+/, '').split('/')
     var version = pieces[0]
-    if (version != undefined) {
-        var replacedVersion
-        if (!semver.valid(version)) {
-            replacedVersion = version.replace(/v(\d{1})/, '$1.0.0')
-        }
-
-        if (semver.valid(replacedVersion) && server.versions.indexOf(replacedVersion) > -1) {
-            req.url = req.url.replace(version + '/', '')
-            req.headers['accept-version'] = version;
-            return next()
-        } else {
-            return responseManager.badRequestError(res, 'Invalid Version Specifier', 'Invalid Version Specifier', null)
-        }
-    } else {
+    var versionNumber = version.replace(/v(\d{1})/, '$1.0.0')
+    if (semver.valid(versionNumber) && server.versions.indexOf(versionNumber) > -1) {
+        req.url = req.url.replace(version + '/', '')
+        req.headers['accept-version'] = version;
         return next()
+    } else {
+        return responseManager.badRequestError(res, 'Invalid Version Specifier', 'Invalid Version Specifier', null)
     }
 })
 

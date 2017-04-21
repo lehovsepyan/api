@@ -10,7 +10,7 @@ const _      = require('lodash'),
 /**
  *  Request Handlers
  */
-const UserHandlerV1  = require('../requests-V1/user'),
+const UserHandlerV1  = require('../requests/v1/user'),
       AdminHandler = require('../requests/admin') 
 
 /**
@@ -33,6 +33,15 @@ server.get('/', function(req, res) {
 server.post({path: '/user', version: '1.0.0'}, UserHandlerV1.create)
 
 server.post({path: '/login', version: '1.0.0'}, UserHandlerV1.login)
+
+server.post({path: '/login', version: '1.1.0'}, function(req, res, next) {
+      res.json({message: '/login 1.1.0'})
+})
+
+server.post({path: '/login', version: '2.0.0'}, function(req, res, next) {
+      res.json({message: '/login 2.0.0'})
+})
+
 
 /**
  * - Authorized API

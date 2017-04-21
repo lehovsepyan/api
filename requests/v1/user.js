@@ -1,10 +1,10 @@
 'use strict'
 
-const User = require('../models/user'),
+const User = require('../../models/user'),
       jwt             = require('jsonwebtoken'),
-      responseManager = require('../response/ResponseManager'),
+      responseManager = require('../../response/ResponseManager'),
       bcrypt = require('bcrypt'),
-      config          = require('../config');
+      config          = require('../../config');
 
 /**
  *  - Authentication
