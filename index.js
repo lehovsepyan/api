@@ -11,6 +11,7 @@ const config          = require('./config'),
       bunyanWinston   = require('bunyan-winston-adapter'),
       mongoose        = require('mongoose'),
       responseManager = require('./response/ResponseManager'),
+      session         = require('./models/session'),
       semver = require('semver');
 
 /**
@@ -58,8 +59,14 @@ global.server = restify.createServer({
                 if (error) {
                     responseManager.tokenExpiredError(res)
                 } else {
-                    req.decoded = decoded;    
-                    next();
+                    session.findOne({ user_id: decoded.id }, function(error, sessionObject) {
+                        if (error || !sessionObject) {
+                            responseManager.tokenExpiredError(res)
+                        } else if (sessionObject && sessionObject.access_token == token) {
+                            req.decoded = sessionObject
+                            next()
+                        }
+                    })
                 }
             })
         } else {

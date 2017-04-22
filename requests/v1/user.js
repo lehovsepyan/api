@@ -6,6 +6,7 @@ const User = require('../../models/user'),
       bcrypt = require('bcrypt'),
       fs = require('fs'),
       path = require("path"),
+      Session = require('../../models/session'),
       config          = require('../../config');
 
 /**
@@ -76,6 +77,13 @@ var login = function(req, res, next) {
  * - API Functionality
 */
 
+var logout = function(req, res ,next) {
+    var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
+    Session.findOne({ user_id: userId}).remove().exec(function() {
+        responseManager.success(res, next, 200)
+    })
+};
+
 var update = function(req, res, next) {
     var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
     User.findOne({ _id: userId}, function(error, user) {
@@ -103,7 +111,9 @@ var update = function(req, res, next) {
             if (req.files.image) {
                 saveImage(req.files.image.path, function(error, imagePath) {
                     if (!error) {
-                        fs.unlinkSync(user.image_url)
+                        if (user.image_url != config.defaultImageUrl) {
+                            fs.unlinkSync(user.image_url)
+                        }
                         user.image_url = imagePath
                         user.save()
                         responseManager.success(res, next, user)
@@ -151,24 +161,43 @@ var loginWith = function(req, res, next, code = 200) {
                         if (error) {
                             responseManager.internalServerError(res, error.message, null, null)
                         } else {
-                            var userObject = {
-                                                name: user.name,
-                                                last_name: user.last_name,
-                                                phone: user.phone,
-                                                birthdate: user.birthdate,
-                                                gender: user.gender,
-                                                image_url: user.image_url || config.defaultImageUrl,
-                                                email: user.email,
-                                                created: user.created,
-                                                token: token
-                                             }
-                            responseManager.success(res, next, userObject, code)
+                             saveToken(user, token, function() {
+                                var userObject = {
+                                    name: user.name,
+                                    last_name: user.last_name,
+                                    phone: user.phone,
+                                    birthdate: user.birthdate,
+                                    gender: user.gender,
+                                    image_url: user.image_url || config.defaultImageUrl,
+                                    email: user.email,
+                                    created: user.created,
+                                    token: token
+                                }
+                                responseManager.success(res, next, userObject, code)
+                            })
                         }
                     })
                  }
             });
         }
      })
+};
+
+var saveToken = function(user, newToken, callback) {
+
+    Session.findOne({ user_id: user._id }, function(error, sessionObject) {
+        if (error) {
+            responseManager.internalServerError(res, error.message, null, null)
+        } else if (sessionObject) { // Replacing token with new one
+            sessionObject.access_token = newToken
+            sessionObject.save()
+            callback()
+        } else { // First login, creating token in db
+            var sessionObject = Session({ user_id: user._id, access_token: newToken}) 
+            sessionObject.save()
+            callback()
+        }
+    })
 };
 
 var saveUser = function(userObject, callback) {
@@ -200,6 +229,7 @@ var saveImage = function(tempImagePath, callback) {
 };
 
 module.exports.getUserInfo = getUserInfo;
+module.exports.logout = logout;
 module.exports.update = update;
 module.exports.register = register;
 module.exports.login = login;

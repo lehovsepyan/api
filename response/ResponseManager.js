@@ -54,9 +54,9 @@ var conflictError = function(res, message, userMessage, details) {
     })
 };
 
-var success = function(res, next = null, object = {}, code = 200) {
+var success = function(res, next = null, object = null, code = 200) {
     res.status(code || 200)
-    res.json(object)
+    res.json(object || {})
     if (next) return next()
 };
 
