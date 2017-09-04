@@ -51,9 +51,9 @@ var BasketSchema = new mongoose.Schema({
                 type: Number,
                 require: true
             },
-            completed: {
-                type: Number,
-                require: false
+            creator_id: {
+                type: String,
+                require: true
             }
         }
     ],
@@ -83,4 +83,14 @@ var basketForCode = function(code, callback) {
     }) 
  };
 
+var basketForId = function(id, callback) {
+    if (id == undefined) {
+        return callback(null);
+    }
+    Basket.findOne( { _id: id } ).select('owner_id name color_index members items code created').exec(function(err, basket) {
+         return callback(basket);
+    }) 
+ };
+
  module.exports.basketForCode = basketForCode;
+ module.exports.basketForId = basketForId;

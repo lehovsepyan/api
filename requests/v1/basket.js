@@ -2,6 +2,7 @@
 
 const   UserForDevice = require('../../models/user').userForDevice,
         BasketForCode = require('../../models/basket').basketForCode,
+        BasketForId = require('../../models/basket').basketForId,
         Basket = require('../../models/basket').Basket,
         BasketItem = require('../../models/basket').BasketItem,
         Member = require('../../models/basket').Member,
@@ -100,8 +101,146 @@ var join = function(req, res) {
     })
 };
 
+var add = function(req, res) {
+
+    if (req == undefined || req.body == undefined)
+        return ResponseManager.badRequest(res, null);
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+       
+        // - Logic goes here
+
+        var failedFields = []    
+        if (req.body.basket_id == undefined)
+            failedFields.push('basket_id');
+        if (req.body.name == undefined)
+            failedFields.push('name');
+        if (req.body.type == undefined)
+            failedFields.push('type');
+        if (req.body.quantity == undefined)
+            failedFields.push('quantity');
+        if (failedFields.length != undefined && failedFields.length != 0) 
+            return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+        BasketForId(req.body.basket_id, function(basket){
+            if (basket == undefined || basket == null)
+                return ResponseManager.badRequest(res, { message: 'Invalid basket_id' });
+
+            var itemObject = {
+                name: req.body.name,
+                type: req.body.type,
+                quantity: req.body.quantity,
+                created: Math.floor(Date.now()),
+                creator_id: user.device_id,
+                status: 0
+            }
+            basket.items.push(itemObject)
+            basket.save(function (err) {
+                if (err)
+                    return ResponseManager.badRequest(res, { message: err.message });
+                return ResponseManager.success(res, basket);
+            })
+        })
+        // -------------------
+    })
+};
+
+var done = function(req, res) {
+
+    if (req == undefined || req.body == undefined)
+        return ResponseManager.badRequest(res, null);
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+       
+        // - Logic goes here
+
+        var failedFields = []    
+        if (req.body.basket_id == undefined)
+            failedFields.push('basket_id');
+        if (req.body.item_id == undefined)
+            failedFields.push('item_id');
+        if (failedFields.length != undefined && failedFields.length != 0) 
+            return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+        BasketForId(req.body.basket_id, function(basket){
+            if (basket == undefined || basket == null)
+                return ResponseManager.badRequest(res, { message: 'Invalid basket_id' });
+
+            for (var i = 0; i < basket.items.length; i++) {
+                var item = basket.items[i]
+                if (item._id == req.body.item_id)
+                    item.status = 1
+            }
+            
+            basket.save(function (err) {
+                if (err)
+                    return ResponseManager.badRequest(res, { message: err.message });
+                return ResponseManager.success(res, basket);
+            })
+        })
+        // -------------------
+    })
+};
+
+var remove = function(req, res) {
+
+    if (req == undefined || req.body == undefined)
+        return ResponseManager.badRequest(res, null);
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+       
+        // - Logic goes here
+
+        var failedFields = []    
+        if (req.body.basket_id == undefined)
+            failedFields.push('basket_id');
+        if (req.body.item_id == undefined)
+            failedFields.push('item_id');
+        if (failedFields.length != undefined && failedFields.length != 0) 
+            return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+        BasketForId(req.body.basket_id, function(basket){
+            if (basket == undefined || basket == null)
+                return ResponseManager.badRequest(res, { message: 'Invalid basket_id' });
+
+            var index = -1
+            for (var i = 0; i < basket.items.length; i++) {
+                if (basket.items[i]._id == req.body.item_id) {
+                    index = i
+                    break
+                }
+            }
+            if (index == -1)
+                return ResponseManager.badRequest(res, { message: 'Item not found' });
+
+            basket.items.splice(index, 1)
+            basket.save(function (err) {
+                if (err)
+                    return ResponseManager.badRequest(res, { message: err.message });
+                return ResponseManager.success(res, basket);
+            })
+        })
+        // -------------------
+    })
+};
+
 module.exports.create = create;
 module.exports.join = join;
+module.exports.add = add;
+module.exports.done = done;
+module.exports.remove = remove;
 
 /**
  * - Admin

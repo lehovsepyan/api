@@ -43,6 +43,12 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
 
  server.post('v1/basket/join', BasketHandlerV1.join);
 
+ server.post('v1/basket/add', BasketHandlerV1.add);
+
+ server.put('v1/basket/item/done', BasketHandlerV1.done);
+
+ server.put('v1/basket/item/remove', BasketHandlerV1.remove);
+
 /**
  *  - Admin
  */
