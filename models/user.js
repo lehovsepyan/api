@@ -20,7 +20,25 @@ var UserSchema = mongoose.Schema({
         type: Number,
         require: true
     },
-    notif_token: String
+    notif_token: {
+        type: String,
+        require: false
+    }
 })
 
-module.exports = mongoose.model('User', UserSchema);
+var User = mongoose.model('User', UserSchema);
+module.exports = User;
+
+/**
+ * - Private
+ */
+var userForDevice = function(deviceId, callback) {
+    if (deviceId == undefined) {
+        return callback(null);
+    }
+    User.findOne( { device_id: deviceId } ).select('notif_token device_id name created').exec(function(err, user) {
+         return callback(user);
+    }) 
+ };
+
+ module.exports.userForDevice = userForDevice;

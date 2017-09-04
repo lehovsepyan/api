@@ -1,20 +1,19 @@
 'use strict'
 
 const User = require('../../models/user'),
-      responseManager = require('../../response/responseManager'),
-      Session = require('../../models/session'),
-      Config          = require('../../config');
+      UserForDevice = require('../../models/user').userForDevice,
+      ResponseManager = require('../../response/responseManager');
 
 
 var register = function(req, res) {
 
     var userObject = {}
-    var failedFields = {}
+    var failedFields = []
     /* 
         - Required fields
     */
     if (req == undefined || req.body == undefined) {
-        return responseManager.badRequest(res, null)
+        return ResponseManager.badRequest(res, null)
     }
     if (req.body.name != undefined && req.body.name.length > 2) {
         userObject['name'] = req.body.name
@@ -29,32 +28,74 @@ var register = function(req, res) {
     }
 
     if (failedFields.length != undefined && failedFields.length != 0) {
-        return responseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+        return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
     }
 
     userObject['created'] = Math.floor(Date.now())
 
     User.findOne({ device_id: userObject.device_id }).select('device_id').select('name').exec(function(error, existingUser) {
         if (existingUser) {
-            return responseManager.badRequest(res, { message: 'User already exists', user: existingUser });
+            return ResponseManager.badRequest(res, { message: 'User already exists', user: existingUser });
         } else {
             var user = new User(userObject)
             user.save(function (err) {
                 if (err) 
-                    return responseManager.badRequest(res, { message: 'Failed to create a user' });
-                return responseManager.success(res, user);
+                    return ResponseManager.badRequest(res, { message: err.message });
+                return ResponseManager.success(res, user);
             })
         }
     })
 };
 
-var getAll = function(req, res) {
-    User.find({}).exec(function(err, result) {
-        if (err)
-            return responseManager.badRequest(res, { message: err.message });
-        return responseManager.success(res, result);
+var registerToken = function(req, res) {
+    if (req == undefined || req.body == undefined)
+        return ResponseManager.badRequest(res, null);
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    var failedFields = []
+
+    if (req.body.token == undefined)
+        failedFields.push('token')
+    if (failedFields.length != undefined && failedFields.length != 0)
+        return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'User not found' });
+        user.notif_token = req.body.token
+        user.save(function(err) {
+            if (err)
+                return ResponseManager.internalError(res, { message: err.message });
+            return ResponseManager.success(res, user);
+        })
     })
 };
 
+
 module.exports.register = register;
+module.exports.registerToken = registerToken;
+
+/**
+ * - Admin
+ */
+
+var getAll = function(req, res) {
+    User.find({}).exec(function(err, result) {
+        if (err)
+            return ResponseManager.badRequest(res, { message: err.message });
+        return ResponseManager.success(res, result);
+    })
+};
+
+var removeAll = function(req, res) {
+    User.remove({}).exec(function(err, result) {
+        if (err)
+            return ResponseManager.badRequest(res, { message: err.message });
+        return ResponseManager.success(res, { message: 'All messages removed successfully' });
+    })
+};
+
 module.exports.getAll = getAll;
+module.exports.removeAll = removeAll;
