@@ -10,7 +10,7 @@ const config          = require('./config'),
       jwt             = require('jsonwebtoken'),
       bunyanWinston   = require('bunyan-winston-adapter'),
       mongoose        = require('mongoose'),
-      responseManager = require('./response/ResponseManager'),
+      responseManager = require('./response/responseManager'),
       session         = require('./models/session'),
       semver = require('semver');
 
@@ -48,45 +48,45 @@ global.server = restify.createServer({
  server.use(restify.fullResponse())
  server.use(restify.authorizationParser())
 
- server.use(function(req, res, next) {
+//  server.use(function(req, res, next) {
 
-     if (req.url.indexOf('api/') == -1) {
-        next()
-     } else {
-        var token = req.headers['x-access-token'];
-        if (token) {
-            jwt.verify(token, config.secret, function(error, decoded) {
-                if (error) {
-                    responseManager.tokenExpiredError(res)
-                } else {
-                    session.findOne({ user_id: decoded.id }, function(error, sessionObject) {
-                        if (error || !sessionObject) {
-                            responseManager.tokenExpiredError(res)
-                        } else if (sessionObject && sessionObject.access_token == token) {
-                            req.decoded = sessionObject
-                            next()
-                        }
-                    })
-                }
-            })
-        } else {
-            responseManager.unauthorizedError(res)
-        }
-     }
-})
+//     //  if (req.url.indexOf('api/') == -1) {
+//     //     next()
+//     //  } else {
+//     //     var token = req.headers['x-access-token'];
+//     //     if (token) {
+//     //         jwt.verify(token, config.secret, function(error, decoded) {
+//     //             if (error) {
+//     //                 responseManager.tokenExpiredError(res)
+//     //             } else {
+//     //                 session.findOne({ user_id: decoded.id }, function(error, sessionObject) {
+//     //                     if (error || !sessionObject) {
+//     //                         responseManager.tokenExpiredError(res)
+//     //                     } else if (sessionObject && sessionObject.access_token == token) {
+//     //                         req.decoded = sessionObject
+//     //                         next()
+//     //                     }
+//     //                 })
+//     //             }
+//     //         })
+//     //     } else {
+//     //         responseManager.unauthorizedError(res)
+//     //     }
+//     //  }
+// })
 
-server.pre(function(req, res, next) {
-    var pieces = req.url.replace(/^\/+/, '').split('/')
-    var version = pieces[0]
-    var versionNumber = version.replace(/v(\d{1})/, '$1.0.0')
-    if (semver.valid(versionNumber) && server.versions.indexOf(versionNumber) > -1) {
-        req.url = req.url.replace(version + '/', '')
-        req.headers['accept-version'] = version;
-        return next()
-    } else {
-        return responseManager.badRequestError(res, 'Invalid Version Specifier', 'Invalid Version Specifier', null)
-    }
-})
+// server.pre(function(req, res, next) {
+//     // var pieces = req.url.replace(/^\/+/, '').split('/')
+//     // var version = pieces[0]
+//     // var versionNumber = version.replace(/v(\d{1})/, '$1.0.0')
+//     // if (semver.valid(versionNumber) && server.versions.indexOf(versionNumber) > -1) {
+//     //     req.url = req.url.replace(version + '/', '')
+//     //     req.headers['accept-version'] = version;
+//     //     return next()
+//     // } else {
+//     //     return responseManager.badRequestError(res, 'Invalid Version Specifier', 'Invalid Version Specifier', null)
+//     // }
+// })
 
 /**
  * Error Handling

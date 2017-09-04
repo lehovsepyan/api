@@ -1,235 +1,60 @@
 'use strict'
 
 const User = require('../../models/user'),
-      jwt             = require('jsonwebtoken'),
-      responseManager = require('../../response/ResponseManager'),
-      bcrypt = require('bcrypt'),
-      fs = require('fs'),
-      path = require("path"),
+      responseManager = require('../../response/responseManager'),
       Session = require('../../models/session'),
-      config          = require('../../config');
+      Config          = require('../../config');
 
-/**
- *  - Authentication
- */
 
-var register = function(req, res, next) {
+var register = function(req, res) {
 
     var userObject = {}
-    var failedFields = []
-
-    if (req.body.password != undefined) {
-        userObject['password'] = req.body.password
+    var failedFields = {}
+    /* 
+        - Required fields
+    */
+    if (req == undefined || req.body == undefined) {
+        return responseManager.badRequest(res, null)
+    }
+    if (req.body.name != undefined && req.body.name.length > 2) {
+        userObject['name'] = req.body.name
     } else {
-        failedFields.push('password')
+        failedFields.push('name')
     }
-    if (req.body.email != undefined) {
-        userObject['email'] = req.body.email
+    
+    if (req.body.device_id != undefined) {
+        userObject['device_id'] = req.body.device_id
     } else {
-        failedFields.push('email')
-    }
-    if (req.body.gender != undefined && ["0", "1"].indexOf(req.body.gender) == -1) {
-         failedFields.push('gender')
+        failedFields.push('device_id')
     }
 
-    if (failedFields.length != 0) {
-        responseManager.badRequestError(res, 'Validation Failed', null, { fields: failedFields })
-        return
+    if (failedFields.length != undefined && failedFields.length != 0) {
+        return responseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
     }
 
-    userObject['gender'] = req.body.gender
-    userObject['name'] = req.body.name
-    userObject['last_name'] = req.body.last_name
-    userObject['birthdate'] = req.body.birthdate
-    userObject['phone'] = req.body.phone
-    userObject['image_url'] = config.defaultImageUrl
+    userObject['created'] = Math.floor(Date.now())
 
-    User.findOne({ email: userObject.email }).select('email').select('name').exec(function(error, existingUser) {
+    User.findOne({ device_id: userObject.device_id }).select('device_id').select('name').exec(function(error, existingUser) {
         if (existingUser) {
-            responseManager.conflictError(res, 'User already exists', 'User already exists', { existing_user: existingUser})
+            return responseManager.badRequest(res, { message: 'User already exists', user: existingUser });
         } else {
-            if (req.files.image) {
-                 saveImage(req.files.image.path, function(error, imagePath) {
-                    if (error) {
-                        responseManager.internalServerError(res, error.message, null, null)
-                    } else {
-                        userObject['image_url'] = imagePath
-                        saveUser(userObject, function() {
-                            loginWith(req, res, next, 201)
-                        })
-                    }
-                })
-            } else {
-                userObject['image_url'] = config.defaultImageUrl
-                saveUser(userObject, function() {
-                    loginWith(req, res, next, 201)
-                })
-            }
+            var user = new User(userObject)
+            user.save(function (err) {
+                if (err) 
+                    return responseManager.badRequest(res, { message: 'Failed to create a user' });
+                return responseManager.success(res, user);
+            })
         }
     })
 };
 
-var login = function(req, res, next) {
-    loginWith(req, res, next)
-};
-
-/**
- * - API Functionality
-*/
-
-var logout = function(req, res ,next) {
-    var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
-    Session.findOne({ user_id: userId}).remove().exec(function() {
-        responseManager.success(res, next, 200)
+var getAll = function(req, res) {
+    User.find({}).exec(function(err, result) {
+        if (err)
+            return responseManager.badRequest(res, { message: err.message });
+        return responseManager.success(res, result);
     })
 };
 
-var update = function(req, res, next) {
-    var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
-    User.findOne({ _id: userId}, function(error, user) {
-        if (error) {
-            responseManager.internalServerError(res, error.message, null, null)
-        } else {
-            if (req.body.email) {
-                user.email = req.body.email
-            }
-            if (req.body.name) {
-                user.name = req.body.name
-            }
-            if (req.body.last_name) {
-                user.last_name = req.body.last_name
-            }
-            if (req.body.phone) {
-                user.phone = req.body.phone
-            }
-            if (req.body.gender) {
-                user.gender = req.body.gender
-            }
-            if (req.body.birthdate) {
-                user.birthdate = req.body.birthdate
-            }
-            if (req.files.image) {
-                saveImage(req.files.image.path, function(error, imagePath) {
-                    if (!error) {
-                        if (user.image_url != config.defaultImageUrl) {
-                            fs.unlinkSync(user.image_url)
-                        }
-                        user.image_url = imagePath
-                        user.save()
-                        responseManager.success(res, next, user)
-                    } 
-                })
-            } else {
-                user.save()
-                responseManager.success(res, next, user)
-            }
-        }
-    })
-};
-
-var getUserInfo = function(req, res, next) {
-    var userId = jwt.verify(req.headers['x-access-token'], config.secret).id
-
-    User.find({ _id: userId }, 'email name last_name phone gender birthdate image_url').exec(function(error, user) {
-        if (error) {
-            responseManager.internalServerError(res, error.message, null, null)
-        } else {
-            responseManager.success(res, next, user)
-        }
-    })
-};
-
-/**
- * - Local Functionality
- */
-
-var loginWith = function(req, res, next, code = 200) {
-    User.findOne({
-            email: req.body.email
-    }, function(error, user) {
-        if (error) {
-            responseManager.internalServerError(res, error.message, null, null)
-        } else if (!user) {
-            responseManager.badRequestError(res, 'User not found', 'User not found', null)
-        } else if (user) {
-            user.comparePassword(req.body.password, function(error, isMatch) {
-                 if (error || !isMatch) {
-                     responseManager.badRequestError(res, 'Incorrect password', 'Incorrect password', null)
-                 } else {
-                    var token = jwt.sign({ id: user._id }, config.secret, { expiresIn : config.tokenExpiration })
-                    user.save(function(error, user, info) {
-                        if (error) {
-                            responseManager.internalServerError(res, error.message, null, null)
-                        } else {
-                             saveToken(user, token, function() {
-                                var userObject = {
-                                    name: user.name,
-                                    last_name: user.last_name,
-                                    phone: user.phone,
-                                    birthdate: user.birthdate,
-                                    gender: user.gender,
-                                    image_url: user.image_url || config.defaultImageUrl,
-                                    email: user.email,
-                                    created: user.created,
-                                    token: token
-                                }
-                                responseManager.success(res, next, userObject, code)
-                            })
-                        }
-                    })
-                 }
-            });
-        }
-     })
-};
-
-var saveToken = function(user, newToken, callback) {
-
-    Session.findOne({ user_id: user._id }, function(error, sessionObject) {
-        if (error) {
-            responseManager.internalServerError(res, error.message, null, null)
-        } else if (sessionObject) { // Replacing token with new one
-            sessionObject.access_token = newToken
-            sessionObject.save()
-            callback()
-        } else { // First login, creating token in db
-            var sessionObject = Session({ user_id: user._id, access_token: newToken}) 
-            sessionObject.save()
-            callback()
-        }
-    })
-};
-
-var saveUser = function(userObject, callback) {
-    var user = User(userObject)
-    user.save(userObject, function(error, _) {
-        if (error) {
-            responseManager.internalServerError(res, error.message, null, null)
-        } else {
-            callback()
-        }
-    })
-};
-
-var saveImage = function(tempImagePath, callback) {
-    if (!tempImagePath) {
-        callback(null, config.defaultImageUrl)
-    } else {
-        var fileExt = path.extname(tempImagePath)
-        var fileName = Date.now() + fileExt
-        var imagePath = process.cwd() + "/images/" + fileName
-        fs.rename(tempImagePath, imagePath, function(error) {
-            if (error) {
-                callback(error, null) 
-            } else {
-                callback(null, imagePath)
-            }
-        })
-    }
-};
-
-module.exports.getUserInfo = getUserInfo;
-module.exports.logout = logout;
-module.exports.update = update;
 module.exports.register = register;
-module.exports.login = login;
+module.exports.getAll = getAll;

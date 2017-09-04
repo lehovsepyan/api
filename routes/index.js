@@ -5,55 +5,43 @@
  */
 const _      = require('lodash'),
       errors = require('restify-errors'),
-      responseManager = require('../response/ResponseManager')
+      responseManager = require('../response/responseManager'),
+      Session = require('../models/session')
 
 /**
  *  Request Handlers
  */
-const UserHandlerV1  = require('../requests/v1/user'),
-      AdminHandler = require('../requests/admin') 
+const UserHandlerV1 = require('../requests/v1/user')
 
 /**
  * Model Schema
  */
-const User = require('../models/user')
+const UserModel = require('../models/user')
 
 /**
  * API Routes
  */
 
 server.get('/', function(req, res) {
-    responseManager.success(res, null, { message: 'Hello! The API is under construction'}, 200)
+    responseManager.success(res,  { message: 'Hello! The API is under construction' })
 })
 
 /**
  *  - Public API
  */
 
-server.post({path: '/user', version: '1.0.0'}, UserHandlerV1.register)
-
-server.post({path: '/login', version: '1.0.0'}, UserHandlerV1.login)
-
-server.post({path: '/login', version: '2.0.0'}, function(req, res, next) {
-      res.json({message: '/login 2.0.0'})
-})
+server.post('v1/user', UserHandlerV1.register);
 
 /**
- * - Authorized API
+ *  - Admin
  */
 
-server.get({path: '/api/user', version: '1.0.0'}, UserHandlerV1.getUserInfo)
+server.post('/db/drop', function(req, res) {
+      Session.db.dropDatabase(function(err) {
+              if(err) 
+                return responseManager.badRequest(res, { message: err.message });
+              return responseManager.success(res, { message: 'Database dropped successfully'});
+      })
+});
 
-server.put({path: '/api/update', version: '1.0.0'}, UserHandlerV1.update)
-
-server.post({path: '/api/logout', version: '1.0.0'}, UserHandlerV1.logout)
-
-/**
- * - Admin
- */
-
-server.post('/admin/remove', AdminHandler.removeAllUsers)
-
-server.get('/admin/users', AdminHandler.getAllUsers)
-
-server.get('/admin/sessions', AdminHandler.getAllSessions)
+server.get('/users', UserHandlerV1.getAll);
