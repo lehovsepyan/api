@@ -41,6 +41,8 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
 
  server.get('v1/baskets', BasketHandlerV1.getForUser);
 
+ server.get('v1/basket', BasketHandlerV1.getWithId);
+
  server.post('v1/basket', BasketHandlerV1.create);
 
  server.post('v1/basket/join', BasketHandlerV1.join);

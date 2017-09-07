@@ -7,8 +7,37 @@ const   UserForDevice = require('../../models/user').userForDevice,
         BasketItem = require('../../models/basket').BasketItem,
         Member = require('../../models/basket').Member,
         ResponseManager = require('../../response/responseManager'),
-        RandomString = require("randomstring");
+        RandomString = require("randomstring"),
+        SendJoinedNotification = require('../../utils/notifications').sendNotificationForJoin,
+        SendAddedNotification = require('../../utils/notifications').sendNotificationForAdd,
+        SendDoneNotification = require('../../utils/notifications').sendNotificationForDone,
+        SendRemoveNotification = require('../../utils/notifications').sendNotificationForRemove;
 
+
+var getWithId = function(req, res) {
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'User not found' });
+       
+        // - Logic goes here
+
+        var failedFields = []
+        if (req.params.basket_id == undefined)
+            failedFields.push('basket_id');
+        if (failedFields.length != undefined && failedFields.length != 0) 
+            return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+        Basket.findOne({ _id: req.params.basket_id }).exec(function(err, result) {
+            if (err)
+                return ResponseManager.badRequest(res, { message: err.message });
+            return ResponseManager.success(res, result);
+        })
+        // -------------------
+    })
+};
 
 var create = function(req, res) {   
 
@@ -19,7 +48,7 @@ var create = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
         // - Logic goes here
         var failedFields = []        
@@ -32,7 +61,8 @@ var create = function(req, res) {
 
         var member = {
                 name: user.name,
-                device_id: req.headers.device_id
+                device_id: req.headers.device_id,
+                notif_token: user.notif_token
         }
         
         var basketObject = {
@@ -64,7 +94,7 @@ var join = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
     // - Logic goes here
         var failedFields = []
@@ -88,12 +118,15 @@ var join = function(req, res) {
 
             var member = {
                 name: user.name,
-                device_id: user.device_id
+                device_id: user.device_id,
+                notif_token: user.notif_token
             }
             basket.members.push(member)
             basket.save(function (err) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
+
+                SendJoinedNotification(user, basket);
                 return ResponseManager.success(res, basket);
             })
         })
@@ -110,7 +143,7 @@ var add = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
         // - Logic goes here
 
@@ -145,6 +178,7 @@ var add = function(req, res) {
                     return ResponseManager.badRequest(res, { message: err.message });
                 for (var i = 0; i < basket.items.length; i++) {
                     if (basket.items[i].created == itemObject.created) {
+                        SendAddedNotification(user, itemObject, basket);
                         return ResponseManager.success(res, basket.items[i]);
                     }
                 }
@@ -164,7 +198,7 @@ var done = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
         // - Logic goes here
 
@@ -180,15 +214,23 @@ var done = function(req, res) {
             if (basket == undefined || basket == null)
                 return ResponseManager.badRequest(res, { message: 'Invalid basket_id' });
 
+            var item
             for (var i = 0; i < basket.items.length; i++) {
-                var item = basket.items[i]
-                if (item._id == req.body.item_id)
-                    item.status = 1
+                item = basket.items[i]
+                if (item._id == req.body.item_id) {
+                    if (item.status == 0) {
+                        item.status = 1
+                        break;
+                    } else {
+                        return ResponseManager.badRequest(res, { message: 'Item is already bought!' });
+                    }
+                }
             }
             
             basket.save(function (err) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
+                SendDoneNotification(user, item, basket);
                 return ResponseManager.success(res, {});
             })
         })
@@ -205,7 +247,7 @@ var remove = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
         // - Logic goes here
 
@@ -221,9 +263,11 @@ var remove = function(req, res) {
             if (basket == undefined || basket == null)
                 return ResponseManager.badRequest(res, { message: 'Invalid basket_id' });
 
+            var item
             var index = -1
             for (var i = 0; i < basket.items.length; i++) {
-                if (basket.items[i]._id == req.body.item_id) {
+                item = basket.items[i]
+                if (item._id == req.body.item_id) {
                     index = i
                     break
                 }
@@ -235,6 +279,7 @@ var remove = function(req, res) {
             basket.save(function (err) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
+                SendRemoveNotification(user, item, basket);
                 return ResponseManager.success(res, {});
             })
         })
@@ -249,7 +294,7 @@ var getForUser = function(req, res) {
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+            return ResponseManager.badRequest(res, { message: 'User not found' });
        
         // - Logic goes here
 
@@ -268,6 +313,7 @@ module.exports.add = add;
 module.exports.done = done;
 module.exports.remove = remove;
 module.exports.getForUser = getForUser;
+module.exports.getWithId = getWithId;
 
 /**
  * - Admin

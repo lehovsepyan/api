@@ -26,6 +26,10 @@ var BasketSchema = new mongoose.Schema({
             device_id: {
                 type: String,
                 require: true
+            },
+            notif_token: {
+                type: String,
+                require: false
             }
         }
     ],
