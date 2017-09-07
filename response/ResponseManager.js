@@ -3,19 +3,25 @@
 
 var badRequest = function(res, object) {
     res.status(400);
-    var responseObject = object || {message: 'Invalid request'}
+    var responseObject = {
+        error: object || { message: 'Invalid request' }
+    }
     res.json(responseObject)
 };
 
 var success = function(res, object) {
     res.status(200);
-    var responseObject = object || {}
+    var responseObject = {
+        result:  object || {}
+    }
     res.json(responseObject)
 };
 
 var internalError = function(res, object) {
     res.status(500);
-    var responseObject = object || {message: 'Internal server error'}
+    var responseObject = {
+        error: object || {message: 'Internal server error'}
+    }
     res.json(responseObject)
 };
 

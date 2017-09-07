@@ -39,6 +39,8 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
  * - Authorized API
  */
 
+ server.get('v1/baskets', BasketHandlerV1.getForUser);
+
  server.post('v1/basket', BasketHandlerV1.create);
 
  server.post('v1/basket/join', BasketHandlerV1.join);

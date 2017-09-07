@@ -31,7 +31,7 @@ var create = function(req, res) {
             return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
 
         var member = {
-                name: req.body.name,
+                name: user.name,
                 device_id: req.headers.device_id
         }
         
@@ -138,11 +138,17 @@ var add = function(req, res) {
                 creator_id: user.device_id,
                 status: 0
             }
-            basket.items.push(itemObject)
-            basket.save(function (err) {
+
+            basket.items.splice(0, 0, itemObject)
+            basket.save(function (err, basket) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
-                return ResponseManager.success(res, basket);
+                for (var i = 0; i < basket.items.length; i++) {
+                    if (basket.items[i].created == itemObject.created) {
+                        return ResponseManager.success(res, basket.items[i]);
+                    }
+                }
+                return ResponseManager.badRequest(res, { message: 'Could not complete operation' });
             })
         })
         // -------------------
@@ -183,7 +189,7 @@ var done = function(req, res) {
             basket.save(function (err) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
-                return ResponseManager.success(res, basket);
+                return ResponseManager.success(res, {});
             })
         })
         // -------------------
@@ -229,8 +235,28 @@ var remove = function(req, res) {
             basket.save(function (err) {
                 if (err)
                     return ResponseManager.badRequest(res, { message: err.message });
-                return ResponseManager.success(res, basket);
+                return ResponseManager.success(res, {});
             })
+        })
+        // -------------------
+    })
+};
+
+var getForUser = function(req, res) {
+    
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+       
+        // - Logic goes here
+
+        Basket.find({ members: { $elemMatch: { device_id: user.device_id} } }).sort({ created : -1 }).exec(function(err, result) {
+            if (err)
+                return ResponseManager.badRequest(res, { message: err.message });
+            return ResponseManager.success(res, result);
         })
         // -------------------
     })
@@ -241,6 +267,7 @@ module.exports.join = join;
 module.exports.add = add;
 module.exports.done = done;
 module.exports.remove = remove;
+module.exports.getForUser = getForUser;
 
 /**
  * - Admin
