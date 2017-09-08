@@ -40,13 +40,13 @@ var sendNotificationForJoin = function(user, basket) {
     if (members == undefined || members.length == undefined) 
         return;
 
-    for (var i = 0; i < members.length - 1; i++) {
+    for (var i = 0; i < members.length; i++) {
         var member = members[i];
         if (member.notif_token == undefined || member.device_id == user.device_id)
             continue;
 
-        var title = '';
-        var message = user.name + ' joined to ' + basket.name + ' basket!';
+        var title = basket.name;
+        var message = user.name + ' joined !';
         var notifObject = {
             basket_id: basket._id
         };
@@ -64,13 +64,13 @@ var sendNotificationForAdd = function(user, item, basket) {
     if (members == undefined || members.length == undefined) 
         return;
 
-    for (var i = 0; i < members.length - 1; i++) {
+    for (var i = 0; i < members.length; i++) {
         var member = members[i];
         if (member.notif_token == undefined || member.device_id == user.device_id)
             continue;
 
-        var title = '';
-        var message = user.name + ' added ' + item.name + ' to ' + basket.name + '!';
+        var title = basket.name;
+        var message = user.name + ' added ' + item.name + ' !';
         var notifObject = {
             basket_id: basket._id
         };
@@ -87,12 +87,12 @@ var sendNotificationForDone = function(user, item, basket) {
     if (members == undefined || members.length == undefined) 
         return;
 
-    for (var i = 0; i < members.length - 1; i++) {
+    for (var i = 0; i < members.length; i++) {
         var member = members[i];
         if (member.notif_token == undefined || member.device_id == user.device_id)
             continue;
 
-        var title = '';
+        var title = basket.name;
         var message = user.name + ' just bought ' + item.name +'!';
         var notifObject = {
             basket_id: basket._id
@@ -110,13 +110,13 @@ var sendNotificationForRemove = function(user, item, basket) {
     if (members == undefined || members.length == undefined) 
         return;
 
-    for (var i = 0; i < members.length - 1; i++) {
+    for (var i = 0; i < members.length; i++) {
         var member = members[i];
         if (member.notif_token == undefined || member.device_id == user.device_id)
             continue;
 
-        var title = '';
-        var message = user.name + ' just removed ' + item.name +' from ' + basket.name + '!';
+        var title = basket.name;
+        var message = user.name + ' just removed ' + item.name +' !';
         var notifObject = {
             basket_id: basket._id
         };
