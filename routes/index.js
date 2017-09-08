@@ -6,7 +6,8 @@
 const _      = require('lodash'),
       errors = require('restify-errors'),
       responseManager = require('../response/responseManager'),
-      Session = require('../models/session');
+      Session = require('../models/session'),
+      fs = require('fs');
 
 /**
  *  Request Handlers
@@ -56,6 +57,15 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
 /**
  *  - Admin
  */
+
+server.get('/app/join', function(req, res) {
+      fs.readFile('./deep_linking.html', function (err, html) {
+            if (err) {
+                  return responseManager.badRequest(res, { message: err.message });
+            }       
+            res.write(html);
+        });
+});
 
 server.post('/db/drop', function(req, res) {
       Session.db.dropDatabase(function(err) {

@@ -1,0 +1,54 @@
+
+<html>
+<head>
+    <meta name="apple-itunes-app" content="app-id=860725973, affiliate-data=myAffiliateData, app-argument=mygapgenius://articles?id=059efb5a-4aad-6ca9-9b9d-ff000016f5a9">
+    <link href="/article/Content/Site.css" rel="stylesheet" />
+    <script type="text/javascript" src="/article/bundles/jquery"></script>
+</head>
+<body class="splash-screen">
+
+    <script type="text/javascript">
+
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+        };
+
+        function openApp() {
+            var code = getURLParameter("code");
+            window.location = 'takeon://baskets?code=' + code;
+
+            setTimeout(function () {
+                if (!document.webkitHidden) {
+                    window.location = 'https://itunes.apple.com/us/app/leveraging-genius/id860725973?mt=8';
+                }
+            }, 25);
+        };
+
+        function startup() {
+
+            var IS_IPAD = navigator.userAgent.match(/iPad/i) != null,
+            IS_IPHONE = !IS_IPAD && ((navigator.userAgent.match(/iPhone/i) != null) || (navigator.userAgent.match(/iPod/i) != null)),
+            IS_IOS = IS_IPAD || IS_IPHONE,
+            IS_ANDROID = !IS_IOS && navigator.userAgent.match(/android/i) != null,
+            IS_MOBILE = IS_IOS || IS_ANDROID;
+
+            if (IS_IOS) {
+				openApp();
+               
+                //$("meta[name='deepLinking']").attr("content", "app-id=860725973, affiliate-data=myAffiliateData, app-argument=mygapgenius://articles?id=" + articleId);
+                //window.location = 'https://itunes.apple.com/us/app/leveraging-genius/id860725973?mt=8';
+            } else if (IS_ANDROID) {
+                /**
+                 * - Ando
+                */
+                var articleId = getURLParameter("id");
+                window.location = 'intent://article?id=' + articleId + '#Intent;package=com.gapinternational.genius;scheme=mygapgenius;launchFlags=268435456;end;';
+            } else {
+                window.location = 'http://www.leveraginggeniuseveryday.com/404/';
+            }
+        };
+
+        startup();
+    </script>
+</body>
+</html>
