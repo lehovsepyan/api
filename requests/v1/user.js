@@ -2,7 +2,7 @@
 
 const User = require('../../models/user'),
       UserForDevice = require('../../models/user').userForDevice,
-      ResponseManager = require('../../response/responseManager');
+      ResponseManager = require('../../response/ResponseManager');
 
 
 var register = function(req, res) {

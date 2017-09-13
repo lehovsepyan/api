@@ -3,7 +3,7 @@
 const mongoose = require('mongoose'),
       mongooseApiQuery = require('mongoose-api-query'),
       createdModified = require('mongoose-createdmodified').createdModifiedPlugin,
-      responseManager = require('../response/responseManager');
+      responseManager = require('../response/ResponseManager');
 
 var SessionSchema = mongoose.Schema({
     user_id: {

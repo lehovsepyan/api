@@ -10,7 +10,7 @@ const config          = require('./config'),
       jwt             = require('jsonwebtoken'),
       bunyanWinston   = require('bunyan-winston-adapter'),
       mongoose        = require('mongoose'),
-      responseManager = require('./response/responseManager'),
+      responseManager = require('./response/ResponseManager'),
       session         = require('./models/session'),
       semver = require('semver');
 

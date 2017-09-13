@@ -5,7 +5,7 @@
  */
 const _      = require('lodash'),
       errors = require('restify-errors'),
-      responseManager = require('../response/responseManager'),
+      responseManager = require('../response/ResponseManager'),
       Session = require('../models/session'),
       fs = require('fs');
 
