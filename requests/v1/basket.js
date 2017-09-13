@@ -11,7 +11,8 @@ const   UserForDevice = require('../../models/user').userForDevice,
         SendJoinedNotification = require('../../utils/notifications').sendNotificationForJoin,
         SendAddedNotification = require('../../utils/notifications').sendNotificationForAdd,
         SendDoneNotification = require('../../utils/notifications').sendNotificationForDone,
-        SendRemoveNotification = require('../../utils/notifications').sendNotificationForRemove;
+        SendRemoveNotification = require('../../utils/notifications').sendNotificationForRemove,
+        SendBasketDeleteNotification = require('../../utils/notifications').sendNotificationForBasketDelete;
 
 
 var getWithId = function(req, res) {
@@ -36,6 +37,41 @@ var getWithId = function(req, res) {
             return ResponseManager.success(res, result);
         })
         // -------------------
+    })
+};
+
+var removeBasketWithId = function(req, res) {
+    if (req == undefined || req.body == undefined)
+        return ResponseManager.badRequest(res, null);
+    if (req.headers == undefined || req.headers.device_id == undefined)
+        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+
+    UserForDevice(req.headers.device_id, function(user) {
+        if (user == undefined || user == null)
+            return ResponseManager.badRequest(res, { message: 'User not found' });
+    
+    // - Logic goes here
+        var failedFields = []
+        if (req.body.basket_id == undefined)
+            failedFields.push('basket_id');
+        if (failedFields.length != undefined && failedFields.length != 0) 
+            return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
+
+        BasketForId(req.body.basket_id, function(basket) {
+            if (basket == undefined || basket == null)
+                return ResponseManager.badRequest(res, { message: 'Basket not found' });
+            if (basket.owner_id != user.device_id)
+                return ResponseManager.badRequest(res, { message: 'Only owner can delete the basket' });
+
+            Basket.findOneAndRemove({ _id: req.body.basket_id }, function(err){
+                if (err) 
+                    return ResponseManager.badRequest(res, { message: err.message });
+
+                SendBasketDeleteNotification(user, basket);
+                return ResponseManager.success(res, {});
+            });
+        });
+    // ---------------
     })
 };
 
@@ -154,8 +190,8 @@ var add = function(req, res) {
             failedFields.push('name');
         if (req.body.type == undefined)
             failedFields.push('type');
-        if (req.body.quantity == undefined)
-            failedFields.push('quantity');
+        // if (req.body.quantity == undefined)
+        //     failedFields.push('quantity');
         if (failedFields.length != undefined && failedFields.length != 0) 
             return ResponseManager.badRequest(res, { message: 'Validation Failed', fields: failedFields });
 
@@ -314,6 +350,7 @@ module.exports.done = done;
 module.exports.remove = remove;
 module.exports.getForUser = getForUser;
 module.exports.getWithId = getWithId;
+module.exports.removeBasketWithId = removeBasketWithId;
 
 /**
  * - Admin

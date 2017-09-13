@@ -54,6 +54,8 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
 
  server.put('v1/basket/item/remove', BasketHandlerV1.remove);
 
+ server.put('v1/basket/remove', BasketHandlerV1.removeBasketWithId);
+
 /**
  *  - Admin
  */

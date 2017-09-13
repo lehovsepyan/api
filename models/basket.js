@@ -45,7 +45,7 @@ var BasketSchema = new mongoose.Schema({
             },
             quantity: {
                 type: Number,
-                require: true
+                require: false
             },
             status: {
                 type: Number,
