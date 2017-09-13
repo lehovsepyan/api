@@ -17,11 +17,11 @@ const   UserForDevice = require('../../models/user').userForDevice,
 
 var getWithId = function(req, res) {
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
 
@@ -44,13 +44,14 @@ var removeBasketWithId = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
     
     // - Logic goes here
+
         var failedFields = []
         if (req.body.basket_id == undefined)
             failedFields.push('basket_id');
@@ -80,11 +81,11 @@ var create = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
         var failedFields = []        
@@ -126,11 +127,11 @@ var join = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
     // - Logic goes here
         var failedFields = []
@@ -175,11 +176,11 @@ var add = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
 
@@ -230,11 +231,11 @@ var done = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
 
@@ -279,11 +280,11 @@ var remove = function(req, res) {
     if (req == undefined || req.body == undefined)
         return ResponseManager.badRequest(res, null);
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
 
@@ -326,11 +327,11 @@ var remove = function(req, res) {
 var getForUser = function(req, res) {
     
     if (req.headers == undefined || req.headers.device_id == undefined)
-        return ResponseManager.badRequest(res, { message: 'Unauthorized user' });
+        return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
 
     UserForDevice(req.headers.device_id, function(user) {
         if (user == undefined || user == null)
-            return ResponseManager.badRequest(res, { message: 'User not found' });
+            return ResponseManager.unauthorized(res, { message: 'Unauthorized user' });
        
         // - Logic goes here
 

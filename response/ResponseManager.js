@@ -1,12 +1,20 @@
 'use strict'
 
 
+var unauthorized = function(res, object) {
+    res.status(401);
+    var responseObject = {
+        error: object || { message: 'Unauthorized User' }
+    }
+    res.json(responseObject);
+};
+
 var badRequest = function(res, object) {
     res.status(400);
     var responseObject = {
         error: object || { message: 'Invalid request' }
     }
-    res.json(responseObject)
+    res.json(responseObject);
 };
 
 var success = function(res, object) {
@@ -14,7 +22,7 @@ var success = function(res, object) {
     var responseObject = {
         result:  object || {}
     }
-    res.json(responseObject)
+    res.json(responseObject);
 };
 
 var internalError = function(res, object) {
@@ -22,9 +30,10 @@ var internalError = function(res, object) {
     var responseObject = {
         error: object || {message: 'Internal server error'}
     }
-    res.json(responseObject)
+    res.json(responseObject);
 };
 
 module.exports.badRequest = badRequest;
 module.exports.internalError = internalError;
 module.exports.success = success;
+module.exports.unauthorized = unauthorized;
