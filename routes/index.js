@@ -7,7 +7,8 @@ const _      = require('lodash'),
       errors = require('restify-errors'),
       responseManager = require('../response/ResponseManager'),
       Session = require('../models/session'),
-      fs = require('fs');
+      fs = require('fs'),
+      config = require('../config');
 
 /**
  *  Request Handlers
@@ -59,6 +60,10 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
 /**
  *  - Admin
  */
+
+server.get('/app/ads', function(req, res) {
+      return responseManager.success(res, { flag: config.showAd });
+});
 
 server.get('/app/join', function(req, res) {
       fs.readFile('./deep_linking.html', function (err, html) {
