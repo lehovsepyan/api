@@ -62,7 +62,13 @@ server.put('v1/user/token', UserHandlerV1.registerToken);
  */
 
 server.get('/app/ads', function(req, res) {
-      return responseManager.success(res, { flag: config.showAd });
+      fs.readFile('./show_ad.txt', "utf8", function (err, text) {
+            if (err) {
+                  return responseManager.badRequest(res, { message: err.message });
+            }       
+            let flag = text == "1" ? 1 : 0
+            return responseManager.success(res, { flag: flag });
+        });
 });
 
 server.get('/app/join', function(req, res) {
